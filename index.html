@@ -159,6 +159,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .sync { font: 500 11px var(--font-mono); color: var(--muted); letter-spacing: .04em; }
 .sec { display: flex; flex-direction: column; gap: 12px; }
 
+
+/* 오늘의 플리 */
+.mus { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.mus audio { width: 100%; }
+.mus-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.mus-list button { width: 100%; min-height: 44px; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; align-items: center; text-align: left; padding: 4px 6px; background: none; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.mus-list li:last-child button { border-bottom: 0; }
+.mus-list .n { font: 500 12px var(--font-mono); color: var(--muted); }
+.mus-list .t { overflow-wrap: anywhere; font-weight: 500; }
+.mus-list .on .t { color: var(--accent); font-weight: 700; }
+
 @media (prefers-reduced-motion: reduce) { .meter b { transition: none; } }
 </style>
 
@@ -196,6 +207,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
       <p class="note">최근 7일 직캠 중 조회수 상승 속도 1위야. 집계 시각 기준이라 실시간은 아니야.</p>
       <a class="pick-alt" id="cam" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer">유튜브에서 직캠 검색</a>
     </div>
+    <div class="mus" id="mus">
+      <span class="cam-b"><span class="cam-t">오늘의 플리</span><span class="cam-s" id="musS">불러오는 중…</span></span>
+      <audio id="aud" controls preload="none"></audio>
+      <ol class="mus-list" id="musList"></ol>
+      <p class="note" id="musMsg"></p>
+    </div>
   </section>
 
   <section class="cal-sec" aria-labelledby="calH">
@@ -224,7 +241,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
     <p class="note">예년 시간표 기준. 최종 시간은 수험표로 확인.</p>
   </section>
 
-  <p class="sync" id="sync">v8 · 이 기기 브라우저에만 저장됨</p>
+  <p class="sync" id="sync">v9 · 이 기기 브라우저에만 저장됨</p>
 </main>
 
 <script>
@@ -497,6 +514,62 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
     say('');
     fetchBest().then(showPick, failPick).then(function () { camBusy = false; $('camBtn').disabled = false; });
   });
+
+
+  /* 오늘의 플리: 저장소 music 폴더의 파일을 날짜별 순서로 재생 */
+  (function () {
+    var EXT = /\.(mp3|m4a|aac|ogg|wav|flac)$/i;
+    var aud = $('aud'), listEl = $('musList'), tracks = [], cur = -1;
+    function seeded(seed) { var x = seed >>> 0; return function () { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; }
+    function order(arr) {
+      var a = arr.slice(), r = seeded(Math.floor(todayMs / DAY));
+      for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+      return a;
+    }
+    function titleOf(f) { try { f = decodeURIComponent(f); } catch (e) {} return f.replace(EXT, '').replace(/[_]+/g, ' '); }
+    function paint() {
+      listEl.textContent = '';
+      tracks.forEach(function (t, i) {
+        var li = mk('li', i === cur ? 'on' : '');
+        var b = mk('button'); b.type = 'button';
+        b.appendChild(mk('span', 'n', String(i + 1)));
+        b.appendChild(mk('span', 't', t.title));
+        b.addEventListener('click', function () { play(i); });
+        li.appendChild(b); listEl.appendChild(li);
+      });
+    }
+    function play(i) {
+      if (i < 0 || i >= tracks.length) return;
+      cur = i;
+      aud.src = 'music/' + encodeURIComponent(tracks[i].file);
+      var p = aud.play(); if (p && p.catch) p.catch(function () {});
+      $('musS').textContent = tracks[i].title;
+      paint();
+    }
+    aud.addEventListener('ended', function () { play((cur + 1) % tracks.length); });
+    aud.addEventListener('error', function () { if (cur >= 0) $('musMsg').textContent = '이 파일을 재생하지 못했어: ' + tracks[cur].title; });
+    function empty() {
+      $('musS').textContent = '아직 곡이 없어';
+      $('musMsg').textContent = '저장소의 music 폴더에 mp3 파일을 올리면 여기에 나타나. 직접 가진 파일이나 무료 음원만 올려줘.';
+      aud.hidden = true;
+    }
+    function done(files) {
+      files = files.filter(function (f) { return EXT.test(f); });
+      if (!files.length) return empty();
+      tracks = order(files.map(function (f) { return { file: f, title: titleOf(f) }; }));
+      $('musS').textContent = tracks.length + '곡 · 오늘 순서';
+      paint();
+    }
+    fetch('music/playlist.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (d) { var f = (d && d.tracks) || []; if (!f.length) throw 0; done(f); })
+      .catch(function () {
+        return fetch('https://api.github.com/repos/danny0119g/Suneung/contents/music')
+          .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+          .then(function (items) { done(items.map(function (x) { return x.name; })); })
+          .catch(empty);
+      });
+  })();
 
   render();
 
