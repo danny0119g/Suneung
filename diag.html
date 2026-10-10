@@ -27,6 +27,14 @@
   <p>지금 연결된 와이파이에서 각 서버에 닿는지 확인해. 버튼을 누르고 약 10초 기다려줘.</p>
   <button id="go" type="button">점검 시작</button>
   <ul id="list"></ul>
+  <h2>실제 재생 테스트</h2>
+  <p>서버에 닿는 것과 실제로 재생되는 건 달라. 아래 플레이어에서 ▶를 눌러서 소리가 나는지 확인해 줘.</p>
+  <h2>1) 유튜브</h2>
+  <iframe title="유튜브 재생 테스트" src="https://www.youtube-nocookie.com/embed/3GMypg8CjEo" width="100%" height="220" style="border:0;border-radius:12px" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+  <h2>2) Spotify</h2>
+  <iframe title="Spotify 재생 테스트" src="https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M" width="100%" height="352" style="border:0;border-radius:12px" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+  <h2>3) Apple Music</h2>
+  <iframe title="Apple Music 재생 테스트" src="https://embed.music.apple.com/kr/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb" width="100%" height="450" style="border:0;border-radius:12px;background:#181E28" allow="autoplay *; encrypted-media *; clipboard-write" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation" loading="lazy"></iframe>
   <h2>보는 법</h2>
   <p>✅ 닿음 / ❌ 막힘(차단 또는 응답 없음). 기준으로 넣은 유튜브·애플 홈페이지와 비교해서, Apple Music 쪽만 ❌이면 와이파이가 Apple Music 서버를 막고 있는 거야.</p>
 </main>
@@ -41,6 +49,7 @@
     ['Apple Music 재생 서버', 'https://play.itunes.apple.com/'],
     ['Apple Music 임베드', 'https://embed.music.apple.com/'],
     ['MusicKit 스크립트', 'https://js-cdn.music.apple.com/musickit/v3/musickit.js'],
+    ['Apple 미리듣기 오디오', 'https://audio-ssl.itunes.apple.com/'],
     ['앨범 이미지 서버', 'https://is1-ssl.mzstatic.com/'],
     ['iTunes 검색 API', 'https://itunes.apple.com/search?term=iu&limit=1'],
     ['유튜브 썸네일 (i.ytimg.com)', 'https://i.ytimg.com/'],
