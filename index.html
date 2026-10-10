@@ -193,7 +193,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
         <span class="pick-body"><img class="pick-img" id="pkImg" alt="" referrerpolicy="no-referrer" hidden><span class="pick-vph" id="pkV"></span><span class="pick-title" id="pkT"></span><span class="pick-meta" id="pkM"></span></span>
       </a>
       <p class="pick-msg" id="camMsg" role="status"></p>
-      <p class="note">최근 7일 직캠 중 조회수 상승 속도 1위를 보여줘. 데이터는 집계 시각 기준이야.</p>
+      <p class="note">최근 7일 직캠 중 조회수 상승 속도 1위야. 집계 시각 기준이라 실시간은 아니야.</p>
       <a class="pick-alt" id="cam" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer">유튜브에서 직캠 검색</a>
     </div>
   </section>
@@ -480,6 +480,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   });
 
   render();
+
+  /* 페이지를 열면 추천 직캠을 바로 보여줌 */
+  fetchBest().then(showPick, failPick);
 })();
 </script>
 
