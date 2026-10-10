@@ -458,13 +458,25 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
     $('pkM').textContent = (b.channelTitle || '') + ' · 조회수 ' + fmtN(b.viewCount || 0) + ' · 집계 ' + (t.getMonth() + 1) + '/' + t.getDate() + ' ' + pad(t.getHours()) + ':' + pad(t.getMinutes());
     $('camRes').href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(b.videoId);
     var img = $('pkImg');
+    var id = encodeURIComponent(b.videoId);
+    var srcs = [
+      'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg',
+      'https://i.ytimg.com/vi/' + id + '/mqdefault.jpg',
+      'https://img.youtube.com/vi/' + id + '/hqdefault.jpg',
+      'https://i.ytimg.com/vi_webp/' + id + '/mqdefault.webp',
+      'https://i.ytimg.com/vi/' + id + '/0.jpg'
+    ];
+    var k = 0;
     img.hidden = true;
-    img.onload = function () { img.hidden = false; };
-    img.onerror = function () { img.hidden = true; };
-    img.src = 'https://i.ytimg.com/vi/' + encodeURIComponent(b.videoId) + '/mqdefault.jpg';
+    img.onload = function () { img.hidden = false; say(''); };
+    img.onerror = function () {
+      k++;
+      if (k < srcs.length) { img.src = srcs[k]; }
+      else { img.hidden = true; say('썸네일을 불러오지 못했어. 카드를 누르면 유튜브에서 영상이 열려.'); }
+    };
+    img.src = srcs[0];
     $('camRes').hidden = false;
     $('camS').textContent = '다시 보기';
-    say('');
   }
   function failPick() {
     $('camS').textContent = '조회수 상승 속도 1위 찾기';
