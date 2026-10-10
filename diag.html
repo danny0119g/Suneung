@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>네트워크 점검</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; padding: 20px 16px 48px; background: #0F131A; color: #E9EDF3; font: 15px/1.55 -apple-system, "Noto Sans KR", sans-serif; }
+  main { max-width: 560px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  p { color: #96A2B3; margin: 0 0 16px; font-size: 13px; }
+  button { height: 46px; padding: 0 20px; border: 0; border-radius: 8px; background: #E9EDF3; color: #0F131A; font: 700 15px inherit; font-family: inherit; cursor: pointer; }
+  ul { list-style: none; margin: 18px 0 0; padding: 0; background: #181E28; border: 1px solid #2A3342; border-radius: 12px; }
+  li { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 12px 14px; border-bottom: 1px solid #2A3342; }
+  li:last-child { border-bottom: 0; }
+  .name { font-weight: 700; }
+  .host { font: 12px ui-monospace, Menlo, monospace; color: #96A2B3; overflow-wrap: anywhere; }
+  .ms { font: 12px ui-monospace, Menlo, monospace; color: #96A2B3; }
+  .ok { color: #5BD18B; } .bad { color: #FF6B58; } .wait { color: #96A2B3; }
+  h2 { font-size: 15px; margin: 22px 0 6px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>네트워크 점검</h1>
+  <p>지금 연결된 와이파이에서 각 서버에 닿는지 확인해. 버튼을 누르고 약 10초 기다려줘.</p>
+  <button id="go" type="button">점검 시작</button>
+  <ul id="list"></ul>
+  <h2>보는 법</h2>
+  <p>✅ 닿음 / ❌ 막힘(차단 또는 응답 없음). 기준으로 넣은 유튜브·애플 홈페이지와 비교해서, Apple Music 쪽만 ❌이면 와이파이가 Apple Music 서버를 막고 있는 거야.</p>
+</main>
+<script>
+(function () {
+  var TESTS = [
+    ['기준: GitHub', 'https://github.com/favicon.ico'],
+    ['기준: Apple 홈페이지', 'https://www.apple.com/favicon.ico'],
+    ['Apple Music 웹', 'https://music.apple.com/favicon.ico'],
+    ['Apple Music API', 'https://api.music.apple.com/'],
+    ['Apple Music 내부 API', 'https://amp-api.music.apple.com/'],
+    ['Apple Music 재생 서버', 'https://play.itunes.apple.com/'],
+    ['Apple Music 임베드', 'https://embed.music.apple.com/'],
+    ['MusicKit 스크립트', 'https://js-cdn.music.apple.com/musickit/v3/musickit.js'],
+    ['앨범 이미지 서버', 'https://is1-ssl.mzstatic.com/'],
+    ['iTunes 검색 API', 'https://itunes.apple.com/search?term=iu&limit=1'],
+    ['유튜브 썸네일 (i.ytimg.com)', 'https://i.ytimg.com/'],
+    ['유튜브 썸네일 (img.youtube.com)', 'https://img.youtube.com/']
+  ];
+  var list = document.getElementById('list');
+  function mk(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+  function build() {
+    list.textContent = '';
+    return TESTS.map(function (t) {
+      var li = mk('li');
+      var ic = mk('span', 'wait', '·');
+      var box = mk('div');
+      box.appendChild(mk('div', 'name', t[0]));
+      box.appendChild(mk('div', 'host', t[1].replace(/^https:\/\//, '').split('/')[0]));
+      var ms = mk('span', 'ms', '');
+      li.appendChild(ic); li.appendChild(box); li.appendChild(ms);
+      list.appendChild(li);
+      return { url: t[1], ic: ic, ms: ms };
+    });
+  }
+  function probe(row) {
+    var t0 = Date.now();
+    var ctl = new AbortController();
+    var timer = setTimeout(function () { ctl.abort(); }, 8000);
+    row.ic.className = 'wait'; row.ic.textContent = '…';
+    return fetch(row.url, { mode: 'no-cors', cache: 'no-store', signal: ctl.signal })
+      .then(function () {
+        row.ic.className = 'ok'; row.ic.textContent = '✅';
+        row.ms.textContent = (Date.now() - t0) + 'ms';
+      }, function () {
+        var slow = Date.now() - t0 >= 7500;
+        row.ic.className = 'bad'; row.ic.textContent = '❌';
+        row.ms.textContent = slow ? '응답 없음' : '차단';
+      })
+      .then(function () { clearTimeout(timer); });
+  }
+  document.getElementById('go').addEventListener('click', function () {
+    var btn = this;
+    btn.disabled = true;
+    var rows = build();
+    Promise.all(rows.map(probe)).then(function () { btn.disabled = false; btn.textContent = '다시 점검'; });
+  });
+  build();
+})();
+</script>
+</body>
+</html>
