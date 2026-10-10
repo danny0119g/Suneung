@@ -224,7 +224,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
     <p class="note">예년 시간표 기준. 최종 시간은 수험표로 확인.</p>
   </section>
 
-  <p class="sync" id="sync">v7 · 이 기기 브라우저에만 저장됨</p>
+  <p class="sync" id="sync">v8 · 이 기기 브라우저에만 저장됨</p>
 </main>
 
 <script>
@@ -460,12 +460,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
     var img = $('pkImg');
     var id = encodeURIComponent(b.videoId);
     var srcs = [
+      'https://img.youtube.com/vi/' + id + '/maxresdefault.jpg',
+      'https://img.youtube.com/vi/' + id + '/sddefault.jpg',
+      'https://img.youtube.com/vi/' + id + '/hqdefault.jpg',
       'https://wsrv.nl/?url=' + encodeURIComponent('i.ytimg.com/vi/' + b.videoId + '/maxresdefault.jpg'),
       'https://i.ytimg.com/vi/' + id + '/maxresdefault.jpg',
-      'https://i.ytimg.com/vi/' + id + '/sddefault.jpg',
-      'https://wsrv.nl/?url=' + encodeURIComponent('i.ytimg.com/vi/' + b.videoId + '/hqdefault.jpg'),
-      'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg',
-      'https://i.ytimg.com/vi/' + id + '/mqdefault.jpg'
+      'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg'
     ];
     /* 저장소에 직접 올린 고화질 썸네일이 있으면 가장 먼저 사용 */
     if (b.thumb) srcs.unshift(b.thumb + '?v=' + r.at);
