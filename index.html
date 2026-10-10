@@ -1,0 +1,486 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>수능 계획표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: D-day number first, then today's checklist (OMR bubbles), then the 41-day calendar that picks which day the checklist shows. */
+:root {
+  --bg: #EEF1F5;
+  --surface: #FFFFFF;
+  --ink: #141A24;
+  --muted: #5B6676;
+  --line: #D3D9E2;
+  --accent: #D93A2B;
+  --accent-ink: #FFFFFF;
+  --p1: #E3E9F2;
+  --p2: #CBD7E9;
+  --p3: #B3C5E0;
+  --font-display: 'Big Shoulders Display', 'Noto Sans KR', sans-serif;
+  --font-body: 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F131A;
+    --surface: #181E28;
+    --ink: #E9EDF3;
+    --muted: #96A2B3;
+    --line: #2A3342;
+    --accent: #FF6B58;
+    --accent-ink: #1A0A08;
+    --p1: #1B2330;
+    --p2: #223048;
+    --p3: #2A3D5C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F131A;
+  --surface: #181E28;
+  --ink: #E9EDF3;
+  --muted: #96A2B3;
+  --line: #2A3342;
+  --accent: #FF6B58;
+  --accent-ink: #1A0A08;
+  --p1: #1B2330;
+  --p2: #223048;
+  --p3: #2A3D5C;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 15px/1.55 var(--font-body);
+  padding-inline: 16px;
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+h1, h2, p { margin: 0; }
+h2 { font: 700 18px/1.3 var(--font-body); text-wrap: balance; }
+button, input, select { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.cam { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; padding: 8px 16px; background: var(--surface); border: 2px solid var(--ink); border-radius: 12px; color: var(--ink); text-decoration: none; }
+.cam { width: 100%; text-align: left; cursor: pointer; }
+.cam:disabled { opacity: .6; cursor: progress; }
+.cam::after { content: '\21BB'; font-size: 22px; line-height: 1; }
+.pick { display: flex; flex-direction: column; gap: 10px; }
+.pick-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; }
+.pick-card::after { content: '\2197'; font-size: 22px; line-height: 1; }
+.pick-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pick-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; background: var(--line); margin-bottom: 6px; }
+.pick-img[hidden] { display: none; }
+.pick-vph { font: 900 34px/1 var(--font-display); font-variant-numeric: tabular-nums; color: var(--accent); }
+.pick-title { font-weight: 700; overflow-wrap: anywhere; }
+.pick-meta { font: 500 12px var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
+.pick-msg { font-size: 14px; color: var(--ink); }
+.pick-msg:empty { display: none; }
+.pick-alt { align-self: flex-start; font-size: 13px; color: var(--muted); text-decoration: underline; padding: 6px 0; }
+.cam-b { display: flex; flex-direction: column; min-width: 0; }
+.cam-t { font-weight: 700; }
+.cam-s { font: 500 12px var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
+
+/* hero */
+.eyebrow { font: 500 12px var(--font-mono); letter-spacing: .08em; color: var(--muted); }
+.dday { display: flex; align-items: baseline; font: 900 clamp(96px, 30vw, 152px)/.84 var(--font-display); margin-top: 6px; }
+.dday .d { color: var(--accent); }
+.track { position: relative; height: 8px; background: var(--line); border-radius: 4px; margin-top: 18px; }
+.track .fill { position: absolute; inset: 0 auto 0 0; background: var(--ink); border-radius: 4px; }
+.track .pin { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg); transform: translate(-50%, -50%); }
+.track-labels { display: flex; justify-content: space-between; font: 500 12px var(--font-mono); color: var(--muted); margin-top: 8px; }
+
+/* day */
+#day { scroll-margin-top: 12px; display: flex; flex-direction: column; gap: 14px; }
+.day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.day-head .sub { font: 500 13px var(--font-mono); color: var(--muted); }
+.day-head .dd { font: 800 22px/1 var(--font-display); letter-spacing: .02em; }
+.remain { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.remain .num { font: 900 76px/.9 var(--font-display); font-variant-numeric: tabular-nums; }
+.remain .num.all { font: 700 40px/1.1 var(--font-body); }
+.remain .lab { font-weight: 500; color: var(--muted); }
+.meter { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.meter b { display: block; height: 100%; background: var(--ink); width: 0; transition: width .25s; }
+
+.list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.list:empty { display: none; }
+.task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px; padding: 4px 4px 4px 2px; border-bottom: 1px solid var(--line); }
+.task:last-child { border-bottom: 0; }
+.bubble { width: 44px; height: 52px; display: grid; place-items: center; background: none; border: 0; cursor: pointer; }
+.bubble::before { content: ''; width: 20px; height: 28px; border: 2px solid var(--ink); border-radius: 50%; }
+.task.done .bubble::before { background: var(--ink); }
+.body { display: flex; flex-direction: column; min-width: 0; padding: 6px 0; }
+.tag { font: 500 11px var(--font-mono); letter-spacing: .08em; color: var(--muted); }
+.txt { overflow-wrap: anywhere; font-weight: 500; }
+.task.done .txt { color: var(--muted); text-decoration: line-through; }
+.del { min-width: 44px; height: 44px; padding: 0 8px; background: none; border: 0; border-radius: 8px; color: var(--muted); font-size: 20px; cursor: pointer; }
+.del.armed { color: var(--accent); font: 700 14px var(--font-body); }
+
+.add { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; }
+.add select, .add input { height: 46px; font-size: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; min-width: 0; }
+.add button { height: 46px; padding: 0 18px; border: 0; border-radius: 8px; background: var(--ink); color: var(--bg); font-weight: 700; cursor: pointer; }
+.ghost { align-self: flex-start; min-height: 44px; padding: 0 16px; background: none; border: 1px solid var(--line); border-radius: 8px; font-weight: 500; font-size: 14px; cursor: pointer; }
+
+/* calendar */
+.cal-sec { display: flex; flex-direction: column; gap: 12px; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.dow { font: 500 11px var(--font-mono); color: var(--muted); text-align: center; }
+.cell { position: relative; aspect-ratio: 1 / 1.05; border: 0; border-radius: 8px; padding: 0; display: grid; place-items: center; color: var(--ink); cursor: pointer; background: var(--p1); }
+.cell.p2 { background: var(--p2); }
+.cell.p3 { background: var(--p3); }
+.cell.x { background: var(--accent); color: var(--accent-ink); }
+.cell .n { font: 800 22px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.cell.past .n { color: var(--muted); }
+.cell small { position: absolute; top: 3px; left: 0; right: 0; text-align: center; font: 500 9px var(--font-mono); color: var(--muted); }
+.cell.x small { color: var(--accent-ink); }
+.cell .bar { position: absolute; left: 7px; right: 7px; bottom: 5px; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--ink) 16%, transparent); display: none; }
+.cell .bar b { display: block; height: 100%; background: var(--ink); border-radius: 2px; }
+.cell.has .bar { display: block; }
+.cell.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+.cell.sel { box-shadow: inset 0 0 0 2px var(--ink); }
+
+/* phases */
+.phases { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.ph { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 12px; align-items: start; }
+.ph i { width: 14px; height: 14px; border-radius: 3px; margin-top: 5px; border: 1px solid var(--line); }
+.ph .when { font: 500 12px var(--font-mono); color: var(--muted); }
+.ph .t { font-weight: 700; }
+.ph .now { display: inline-block; margin-left: 8px; padding: 0 8px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font: 700 11px/18px var(--font-body); vertical-align: 2px; }
+.ph p { color: var(--muted); max-width: 65ch; }
+
+/* timetable */
+.tt-wrap { overflow-x: auto; }
+.tt { width: 100%; border-collapse: collapse; }
+.tt td { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.tt td:first-child { font: 500 14px var(--font-mono); white-space: nowrap; padding-right: 20px; font-variant-numeric: tabular-nums; }
+.tt td:last-child { font-weight: 500; }
+.note { font-size: 13px; color: var(--muted); }
+.sync { font: 500 11px var(--font-mono); color: var(--muted); letter-spacing: .04em; }
+.sec { display: flex; flex-direction: column; gap: 12px; }
+
+@media (prefers-reduced-motion: reduce) { .meter b { transition: none; } }
+</style>
+
+<main class="wrap">
+  <header>
+    <p class="eyebrow">2027학년도 수능 · 2026.11.19 목</p>
+    <h1 class="dday" aria-live="polite"><span class="d" id="dpre">D-</span><span id="dnum">40</span></h1>
+    <div class="track" aria-hidden="true"><div class="fill" id="fill"></div><div class="pin" id="pin"></div></div>
+    <div class="track-labels"><span>10.10</span><span>11.19</span></div>
+  </header>
+
+  <section id="day" aria-labelledby="dayTitle">
+    <div class="day-head">
+      <h2 id="dayTitle">오늘</h2>
+      <span class="sub" id="daySub"></span>
+      <span class="dd" id="dayD"></span>
+    </div>
+    <div class="remain"><span class="num" id="remNum">0</span><span class="lab" id="remLab"></span></div>
+    <div class="meter" aria-hidden="true"><b id="meter"></b></div>
+    <ul class="list" id="tasks"></ul>
+    <form class="add" id="addForm" autocomplete="off">
+      <select id="subj" aria-label="과목">
+        <option>국어</option><option>수학</option><option>영어</option><option>생1</option><option>지1</option><option>기타</option>
+      </select>
+      <input id="txt" type="text" maxlength="80" placeholder="할 일 입력" aria-label="할 일">
+      <button type="submit">추가</button>
+    </form>
+    <button type="button" class="ghost" id="fill-routine">기본 루틴 넣기</button>
+    <div class="pick">
+      <button type="button" class="cam" id="camBtn"><span class="cam-b"><span class="cam-t">오늘의 추천 직캠</span><span class="cam-s" id="camS">조회수 상승 속도 1위 찾기</span></span></button>
+      <a class="pick-card" id="camRes" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" hidden>
+        <span class="pick-body"><img class="pick-img" id="pkImg" alt="" referrerpolicy="no-referrer" hidden><span class="pick-vph" id="pkV"></span><span class="pick-title" id="pkT"></span><span class="pick-meta" id="pkM"></span></span>
+      </a>
+      <p class="pick-msg" id="camMsg" role="status"></p>
+      <p class="note">최근 7일 직캠 중 조회수 상승 속도 1위를 보여줘. 데이터는 집계 시각 기준이야.</p>
+      <a class="pick-alt" id="cam" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer">유튜브에서 직캠 검색</a>
+    </div>
+  </section>
+
+  <section class="cal-sec" aria-labelledby="calH">
+    <h2 id="calH">40일 한눈에</h2>
+    <div class="cal" id="cal"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="phH">
+    <h2 id="phH">구간별 할 일</h2>
+    <ul class="phases" id="phases"></ul>
+  </section>
+
+  <section class="sec" aria-labelledby="ttH">
+    <h2 id="ttH">수능 당일 시간표</h2>
+    <div class="tt-wrap">
+      <table class="tt">
+        <tbody>
+          <tr><td>08:10</td><td>입실</td></tr>
+          <tr><td>08:40 – 10:00</td><td>1교시 국어</td></tr>
+          <tr><td>10:30 – 12:10</td><td>2교시 수학</td></tr>
+          <tr><td>13:10 – 14:20</td><td>3교시 영어</td></tr>
+          <tr><td>14:50 – 16:37</td><td>4교시 한국사 · 탐구</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">예년 시간표 기준. 최종 시간은 수험표로 확인.</p>
+  </section>
+
+  <p class="sync" id="sync">이 기기 브라우저에만 저장됨</p>
+</main>
+
+<script>
+(function () {
+  var DAY = 86400000;
+  var START = Date.UTC(2026, 9, 10);
+  var EXAM = Date.UTC(2026, 10, 19);
+  var N = 40;
+  var KEY = 'suneung-plan-v1';
+  var DOW = ['일', '월', '화', '수', '목', '금', '토'];
+  var ROUTINE = [
+    ['국어', '기출 지문 3개, 시간 재고 풀기'],
+    ['수학', '기출 15문항, 시간 재고 풀기'],
+    ['영어', '독해 1세트'],
+    ['생1', '기출 1세트'],
+    ['지1', '기출 1세트'],
+    ['기타', '오늘 틀린 문제 정리']
+  ];
+  var PHASES = [
+    { a: 0, b: 15, c: 'p1', when: '10.10 – 10.25', title: '틀린 유형 메우기', text: '오답 노트에서 반복해서 틀린 유형만 골라 다시 푼다. 새 교재는 시작하지 않는다.' },
+    { a: 16, b: 30, c: 'p2', when: '10.26 – 11.09', title: '시간표대로 풀기', text: '수능 시간표에 맞춰 시간을 재고 푼다. 시간 배분 실수를 줄이는 구간.' },
+    { a: 31, b: 39, c: 'p3', when: '11.10 – 11.18', title: '컨디션 고정', text: '새 문제는 줄이고 오답과 암기 위주로 본다. 기상, 식사, 취침 시간을 수능 날에 맞춘다.' }
+  ];
+
+  var CAMS = ['아이돌 직캠 4K', '음악방송 직캠', '페스티벌 직캠', '콘서트 직캠 풀캠', '엔딩요정 직캠', '1열 직캠', '걸그룹 직캠 4K', '보이그룹 직캠 4K'];
+
+  function $(id) { return document.getElementById(id); }
+  function mk(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  var now = new Date();
+  var todayMs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  var todayIdx = Math.round((todayMs - START) / DAY);
+  var sel = Math.min(N, Math.max(0, todayIdx));
+
+  function dateOf(i) { return new Date(START + i * DAY); }
+  function keyOf(i) { var d = dateOf(i); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
+  function fmt(i) { var d = dateOf(i); return (d.getUTCMonth() + 1) + '월 ' + d.getUTCDate() + '일 (' + DOW[d.getUTCDay()] + ')'; }
+  function phaseOf(i) { return i >= N ? 'x' : i <= 15 ? 'p1' : i <= 30 ? 'p2' : 'p3'; }
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+  function routine() { return ROUTINE.map(function (r) { return { id: uid(), s: r[0], t: r[1], d: false }; }); }
+
+  var state = { days: {} };
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) { var p = JSON.parse(raw); if (p && p.days) state = p; }
+  } catch (e) {}
+  if (!Object.keys(state.days).length) state.days[keyOf(sel)] = routine();
+
+  function tasksOf(i) { return state.days[keyOf(i)] || []; }
+  function setTasks(i, arr) { state.days[keyOf(i)] = arr; persist(); render(); }
+
+  /* persistence: local copy always, account store when the db capability answers */
+  var dbDoc = null, ready = false, dirty = false, saving = false, timer = null;
+  function persist() {
+    dirty = true;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    clearTimeout(timer);
+    timer = setTimeout(flush, 500);
+  }
+  function flush() {
+    if (!dbDoc || !ready) return;
+    if (saving) { timer = setTimeout(flush, 300); return; }
+    saving = true;
+    dbDoc.set({ v: 1, days: state.days }).then(function () { dirty = false; }, function () {}).then(function () { saving = false; });
+  }
+  ready = true;
+
+  /* actions */
+  var armed = null, armTimer = null;
+  function toggle(id) {
+    setTasks(sel, tasksOf(sel).map(function (t) { return t.id === id ? { id: t.id, s: t.s, t: t.t, d: !t.d } : t; }));
+  }
+  function remove(id) {
+    if (armed !== id) {
+      armed = id; render();
+      clearTimeout(armTimer);
+      armTimer = setTimeout(function () { armed = null; render(); }, 2500);
+      return;
+    }
+    armed = null;
+    setTasks(sel, tasksOf(sel).filter(function (t) { return t.id !== id; }));
+  }
+
+  $('addForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = $('txt').value.trim();
+    if (!v) { $('txt').focus(); return; }
+    setTasks(sel, tasksOf(sel).concat([{ id: uid(), s: $('subj').value, t: v, d: false }]));
+    $('txt').value = '';
+    $('txt').focus();
+  });
+  $('fill-routine').addEventListener('click', function () {
+    var cur = tasksOf(sel);
+    var add = routine().filter(function (r) {
+      return !cur.some(function (t) { return t.s === r.s && t.t === r.t; });
+    });
+    if (add.length) setTasks(sel, cur.concat(add));
+  });
+
+  /* calendar skeleton, built once */
+  var cal = $('cal');
+  ['월', '화', '수', '목', '금', '토', '일'].forEach(function (d) { cal.appendChild(mk('div', 'dow', d)); });
+  var lead = (dateOf(0).getUTCDay() + 6) % 7;
+  for (var b = 0; b < lead; b++) { var bl = mk('div'); bl.setAttribute('aria-hidden', 'true'); cal.appendChild(bl); }
+  var cells = [];
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  for (var i = 0; i <= N; i++) {
+    (function (i) {
+      var c = mk('button', 'cell ' + phaseOf(i));
+      c.type = 'button';
+      var d = dateOf(i);
+      if (i === 0 || d.getUTCDate() === 1) c.appendChild(mk('small', null, (d.getUTCMonth() + 1) + '월'));
+      if (i === N) c.appendChild(mk('small', null, '수능'));
+      c.appendChild(mk('span', 'n', String(d.getUTCDate())));
+      var bar = mk('i', 'bar'); bar.appendChild(mk('b')); c.appendChild(bar);
+      c.addEventListener('click', function () {
+        sel = i; armed = null; render();
+        $('day').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      });
+      cal.appendChild(c);
+      cells[i] = c;
+    })(i);
+  }
+
+  function render() {
+    /* hero */
+    var left = Math.round((EXAM - todayMs) / DAY);
+    $('dpre').textContent = left < 0 ? 'D+' : 'D-';
+    $('dnum').textContent = left > 0 ? String(left) : left === 0 ? 'DAY' : String(-left);
+    var el = Math.min(N, Math.max(0, (todayMs - START) / DAY));
+    var pct = (el / N * 100).toFixed(1) + '%';
+    $('fill').style.width = pct;
+    $('pin').style.left = pct;
+
+    /* selected day */
+    var tasks = tasksOf(sel);
+    var total = tasks.length;
+    var done = tasks.filter(function (t) { return t.d; }).length;
+    var undone = total - done;
+    $('dayTitle').textContent = sel === todayIdx ? '오늘' : fmt(sel);
+    $('daySub').textContent = sel === todayIdx ? fmt(sel) : '';
+    $('dayD').textContent = sel >= N ? '수능 당일' : 'D-' + (N - sel);
+    var num = $('remNum');
+    if (total === 0) { num.className = 'num'; num.textContent = '0'; $('remLab').textContent = '개 · 아래에서 추가'; }
+    else if (undone === 0) { num.className = 'num all'; num.textContent = '전부 완료'; $('remLab').textContent = ''; }
+    else { num.className = 'num'; num.textContent = String(undone); $('remLab').textContent = '개 남음 · 전체 ' + total; }
+    $('meter').style.width = (total ? done / total * 100 : 0) + '%';
+    $('fill-routine').textContent = total === 0 ? '기본 루틴 넣기' : '기본 루틴 더하기';
+
+    var list = $('tasks');
+    list.textContent = '';
+    tasks.forEach(function (t) {
+      var li = mk('li', 'task' + (t.d ? ' done' : ''));
+      var bub = mk('button', 'bubble');
+      bub.type = 'button';
+      bub.setAttribute('role', 'checkbox');
+      bub.setAttribute('aria-checked', t.d ? 'true' : 'false');
+      bub.setAttribute('aria-label', t.s + ' ' + t.t);
+      bub.addEventListener('click', function () { toggle(t.id); });
+      var body = mk('div', 'body');
+      body.appendChild(mk('span', 'tag', t.s));
+      body.appendChild(mk('span', 'txt', t.t));
+      var del = mk('button', 'del' + (armed === t.id ? ' armed' : ''), armed === t.id ? '삭제?' : '×');
+      del.type = 'button';
+      del.setAttribute('aria-label', '삭제: ' + t.t);
+      del.addEventListener('click', function () { remove(t.id); });
+      li.appendChild(bub); li.appendChild(body); li.appendChild(del);
+      list.appendChild(li);
+    });
+
+    /* calendar */
+    for (var i = 0; i <= N; i++) {
+      var c = cells[i];
+      var ts = tasksOf(i);
+      var dn = ts.filter(function (t) { return t.d; }).length;
+      c.classList.toggle('has', ts.length > 0);
+      c.classList.toggle('past', i < todayIdx);
+      c.classList.toggle('today', i === todayIdx);
+      c.classList.toggle('sel', i === sel);
+      if (i === todayIdx) c.setAttribute('aria-current', 'date'); else c.removeAttribute('aria-current');
+      c.querySelector('.bar b').style.width = (ts.length ? dn / ts.length * 100 : 0) + '%';
+      c.setAttribute('aria-label', fmt(i) + (i === N ? ', 수능' : '') + (ts.length ? ', 완료 ' + dn + '/' + ts.length : ''));
+    }
+
+    /* phases */
+    var ph = $('phases');
+    ph.textContent = '';
+    var cur = Math.min(N - 1, Math.max(0, todayIdx));
+    PHASES.forEach(function (p) {
+      var li = mk('li', 'ph');
+      var sw = mk('i'); sw.style.background = 'var(--' + p.c + ')';
+      var box = mk('div');
+      box.appendChild(mk('div', 'when', p.when));
+      var t = mk('div', 't', p.title);
+      if (todayIdx <= N - 1 && cur >= p.a && cur <= p.b) t.appendChild(mk('span', 'now', '지금'));
+      box.appendChild(t);
+      box.appendChild(mk('p', null, p.text));
+      li.appendChild(sw); li.appendChild(box);
+      ph.appendChild(li);
+    });
+  }
+
+  var camQ = CAMS[Math.floor(todayMs / DAY) % CAMS.length];
+  $('cam').href = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(camQ);
+  $('cam').textContent = '유튜브에서 직캠 검색 · ' + camQ;
+
+  /* fancam pick: vidIQ trending videos, fastest views-per-hour in the last 7 days */
+  var camBusy = false;
+  function fmtN(n) { return Math.round(n).toLocaleString('ko-KR'); }
+  function say(s) { $('camMsg').textContent = s || ''; }
+  function fetchBest() {
+    return fetch('pick.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw { code: '__empty' };
+      return r.json();
+    }).then(function (d) {
+      var best = d && d.best;
+      if (!best || !/^[A-Za-z0-9_-]{11}$/.test(String(best.videoId))) throw { code: '__empty' };
+      return { best: best, at: d.at || Date.now() };
+    });
+  }
+  function showPick(r) {
+    var b = r.best, t = new Date(r.at);
+    $('pkV').textContent = '+' + fmtN(b.vph) + ' 조회/시간';
+    $('pkT').textContent = b.videoTitle || '';
+    $('pkM').textContent = (b.channelTitle || '') + ' · 조회수 ' + fmtN(b.viewCount || 0) + ' · 집계 ' + (t.getMonth() + 1) + '/' + t.getDate() + ' ' + pad(t.getHours()) + ':' + pad(t.getMinutes());
+    $('camRes').href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(b.videoId);
+    var img = $('pkImg');
+    img.hidden = true;
+    img.onload = function () { img.hidden = false; };
+    img.onerror = function () { img.hidden = true; };
+    img.src = 'https://i.ytimg.com/vi/' + encodeURIComponent(b.videoId) + '/mqdefault.jpg';
+    $('camRes').hidden = false;
+    $('camS').textContent = '다시 보기';
+    say('');
+  }
+  function failPick() {
+    $('camS').textContent = '조회수 상승 속도 1위 찾기';
+    say('추천 데이터를 불러오지 못했어. 아래 검색 링크를 써줘.');
+  }
+  $('camBtn').addEventListener('click', function () {
+    if (camBusy) return;
+    camBusy = true;
+    $('camBtn').disabled = true;
+    $('camS').textContent = '분석 중…';
+    say('');
+    fetchBest().then(showPick, failPick).then(function () { camBusy = false; $('camBtn').disabled = false; });
+  });
+
+  render();
+})();
+</script>
+
+</body></html>
