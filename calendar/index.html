@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>수능 과목 달력</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+  /* Layout: graph-paper notebook page. D-day header, subject brush bar, 7-column calendar with diagonal-band fills. */
+  :root {
+    --bg: #f5f7f3;
+    --line: #d6dcd3;
+    --cell: #ffffff;
+    --ink: #1b2231;
+    --muted: #667086;
+    --pill: rgba(255,255,255,.93);
+    --red: #e5352b;
+    --c-math: #4aa3ff;  --on-math: #0d2540;
+    --c-bio:  #2b57b5;  --on-bio:  #ffffff;
+    --c-earth:#35c04a;  --on-earth:#0b2e12;
+    --c-eng:  #7a3fb5;  --on-eng:  #ffffff;
+    --c-kor:  #f28a1e;  --on-kor:  #3a1c00;
+    --hand: "Gaegu", "Noto Sans KR", cursive;
+    --sans: "Noto Sans KR", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141821; --line: #252c3b; --cell: #1c2230; --ink: #eef1f7; --muted: #99a2b7;
+      --pill: rgba(20,24,33,.92); --red: #ff5a4f;
+      --c-math: #5db0ff; --c-bio: #4f7fe0; --c-earth: #3fcf5a; --c-eng: #a070e0; --c-kor: #ff9a38;
+      --on-math: #08203a; --on-bio: #ffffff; --on-earth: #082610; --on-eng: #ffffff; --on-kor: #351a00;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141821; --line: #252c3b; --cell: #1c2230; --ink: #eef1f7; --muted: #99a2b7;
+    --pill: rgba(20,24,33,.92); --red: #ff5a4f;
+    --c-math: #5db0ff; --c-bio: #4f7fe0; --c-earth: #3fcf5a; --c-eng: #a070e0; --c-kor: #ff9a38;
+    --on-math: #08203a; --on-bio: #ffffff; --on-earth: #082610; --on-eng: #ffffff; --on-kor: #351a00;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color: var(--ink);
+    font-family: var(--sans);
+    padding-inline: 16px;
+    padding-block: 20px 40px;
+    min-height: 100%;
+  }
+  .wrap { max-width: 720px; margin-inline: auto; display: flex; flex-direction: column; gap: 16px; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { margin: 0; font-family: var(--hand); font-weight: 700; font-size: clamp(48px, 13vw, 80px); line-height: .95; letter-spacing: -.01em; }
+  h1 b { color: var(--red); font-weight: 700; }
+  .date { font-family: var(--hand); font-size: 22px; color: var(--muted); padding-bottom: 6px; }
+
+  .brushes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    appearance: none; cursor: pointer; font: inherit;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 14px; border-radius: 999px;
+    background: var(--cell); color: var(--ink);
+    border: 2.5px solid var(--bc, var(--line));
+    font-family: var(--hand); font-weight: 700; font-size: 22px; line-height: 1;
+    transition: transform .08s;
+  }
+  .chip:active { transform: scale(.96); }
+  .chip .n { font-family: var(--sans); font-size: 12px; font-weight: 700; opacity: .75; font-variant-numeric: tabular-nums; }
+  .chip[aria-pressed="true"] { background: var(--bc); color: var(--oc, var(--bg)); box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .chip.erase { --bc: var(--muted); --oc: var(--bg); font-size: 18px; }
+  .chip:focus-visible, .day:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  .hint { margin: 0; font-size: 13px; color: var(--muted); }
+
+  .cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .dow { text-align: center; font-family: var(--hand); font-weight: 700; font-size: 22px; padding-bottom: 2px; }
+  .dow.sun { color: var(--red); }
+
+  .day {
+    position: relative; aspect-ratio: 1 / 1.05; min-width: 0;
+    background: var(--cell); border: 1.5px solid var(--line); border-radius: 8px;
+    cursor: pointer; overflow: visible;
+  }
+  .day.blank { background: transparent; border-color: transparent; pointer-events: none; }
+  .num {
+    position: absolute; top: 3px; left: 3px;
+    display: flex; flex-direction: column; align-items: flex-start;
+    padding: 0 5px; border-radius: 6px;
+    font-family: var(--hand); font-weight: 700; font-size: clamp(20px, 5.4vw, 30px); line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+  .num i { font-style: normal; font-family: var(--sans); font-size: 10px; font-weight: 700; color: var(--muted); line-height: 1.2; }
+  .day.filled .num { background: var(--pill); }
+  .day.past .num span { text-decoration: line-through; text-decoration-thickness: 3px; text-decoration-color: var(--muted); }
+  .day.today { outline: 3px solid var(--ink); outline-offset: 1px; }
+  .tag {
+    position: absolute; right: 3px; bottom: 3px; padding: 1px 6px; border-radius: 6px;
+    font-family: var(--hand); font-weight: 700; font-size: 16px; line-height: 1.2;
+    background: var(--ink); color: var(--bg);
+  }
+  .tag.exam { background: var(--red); color: #fff; }
+  .circle { position: absolute; inset: -9px -7px; width: calc(100% + 14px); height: calc(100% + 18px); pointer-events: none; overflow: visible; }
+  .circle ellipse { fill: none; stroke: var(--red); stroke-width: 3.5; stroke-linecap: round; }
+
+  .foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .chip { transition: none; } }
+</style>
+<style>html{height:100%}body{margin:0}</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="dday">수능 <b>D-?</b></h1>
+    <div class="date">11월 19일 목요일</div>
+  </header>
+
+  <div class="brushes" id="brushes" role="group" aria-label="칠할 과목"></div>
+  <p class="hint">과목을 고르고 날짜를 누르면 칠해져요. 드래그하면 여러 날을 한 번에, 같은 과목을 다시 누르면 지워져요.</p>
+
+  <div class="cal" id="cal" aria-label="10월 13일부터 수능까지 달력"></div>
+
+  <div class="foot"><span id="status">불러오는 중</span><span>지난 날은 숫자에 줄이 그어져요</span></div>
+</div>
+
+<script>
+(function () {
+  var SUBJ = [
+    { id: 'math', name: '수학' }, { id: 'bio', name: '생I' }, { id: 'earth', name: '지I' },
+    { id: 'eng', name: '영어' }, { id: 'kor', name: '국어' }
+  ];
+  var START = new Date(2026, 9, 13), EXAM = new Date(2026, 10, 19);
+  var LS = 'suneung-subject-cal-v1', LSB = 'suneung-subject-brush-v1';
+  var DOW = ['일', '월', '화', '수', '목', '금', '토'];
+
+  var state = {};          // { 'YYYY-MM-DD': ['math', ...] }
+  var brush = 'math';
+  var cells = {};          // key -> element
+  var dragging = false, dragAction = null;
+  var dbDoc = null, saving = false, queued = false, saveTimer = null;
+
+  function key(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function today0() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+
+  try { var s = localStorage.getItem(LS); if (s) state = JSON.parse(s) || {}; } catch (e) {}
+  try { var b = localStorage.getItem(LSB); if (b) brush = b; } catch (e) {}
+
+  /* D-day header */
+  function paintDday() {
+    var diff = Math.round((EXAM - today0()) / 864e5);
+    var t = diff > 0 ? 'D-' + diff : diff === 0 ? 'D-DAY' : 'D+' + (-diff);
+    document.getElementById('dday').innerHTML = '수능 <b>' + t + '</b>';
+  }
+
+  /* Brush chips */
+  var brushBox = document.getElementById('brushes');
+  var chipEls = {};
+  SUBJ.forEach(function (sj) {
+    var el = document.createElement('button');
+    el.type = 'button'; el.className = 'chip';
+    el.style.setProperty('--bc', 'var(--c-' + sj.id + ')');
+    el.style.setProperty('--oc', 'var(--on-' + sj.id + ')');
+    el.innerHTML = '<span>' + sj.name + '</span><span class="n">0</span>';
+    el.addEventListener('click', function () { setBrush(sj.id); });
+    brushBox.appendChild(el); chipEls[sj.id] = el;
+  });
+  var er = document.createElement('button');
+  er.type = 'button'; er.className = 'chip erase'; er.textContent = '지우개';
+  er.addEventListener('click', function () { setBrush('erase'); });
+  brushBox.appendChild(er); chipEls.erase = er;
+
+  function setBrush(id) {
+    brush = id;
+    try { localStorage.setItem(LSB, id); } catch (e) {}
+    Object.keys(chipEls).forEach(function (k) { chipEls[k].setAttribute('aria-pressed', k === id ? 'true' : 'false'); });
+  }
+
+  /* Calendar */
+  var cal = document.getElementById('cal');
+  DOW.forEach(function (n, i) {
+    var h = document.createElement('div'); h.className = 'dow' + (i === 0 ? ' sun' : ''); h.textContent = n; cal.appendChild(h);
+  });
+  function blank() { var d = document.createElement('div'); d.className = 'day blank'; cal.appendChild(d); }
+  for (var i = 0; i < START.getDay(); i++) blank();
+  var tk = key(today0());
+  for (var d = new Date(START); d <= EXAM; d.setDate(d.getDate() + 1)) {
+    var k = key(d), el = document.createElement('div');
+    el.className = 'day'; el.dataset.k = k; el.tabIndex = 0; el.setAttribute('role', 'button');
+    var mo = (d.getTime() === START.getTime() || d.getDate() === 1) ? '<i>' + (d.getMonth() + 1) + '월</i>' : '';
+    var html = '<span class="num">' + mo + '<span>' + d.getDate() + '</span></span>';
+    if (d.getTime() === EXAM.getTime()) {
+      html += '<svg class="circle" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="50" rx="48" ry="47" transform="rotate(-6 50 50)"/></svg><span class="tag exam">수능</span>';
+    }
+    el.innerHTML = html;
+    if (k === tk) { el.classList.add('today'); if (d.getTime() !== EXAM.getTime()) el.insertAdjacentHTML('beforeend', '<span class="tag">오늘</span>'); }
+    else if (k < tk) el.classList.add('past');
+    el.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); apply(e.currentTarget, null); commit(); }
+    });
+    cal.appendChild(el); cells[k] = el;
+  }
+  while ((cal.children.length - 7) % 7 !== 0) blank();
+
+  function paintCell(k) {
+    var el = cells[k], list = (state[k] || []);
+    el.setAttribute('aria-label', k + ' ' + (list.length ? list.map(nm).join(', ') : '기록 없음'));
+    if (!list.length) { el.style.background = ''; el.classList.remove('filled'); return; }
+    el.classList.add('filled');
+    if (list.length === 1) { el.style.background = 'var(--c-' + list[0] + ')'; return; }
+    var step = 100 / list.length, parts = list.map(function (id, i) {
+      return 'var(--c-' + id + ') ' + (i * step).toFixed(2) + '% ' + ((i + 1) * step).toFixed(2) + '%';
+    });
+    el.style.background = 'linear-gradient(135deg,' + parts.join(',') + ')';
+  }
+  function nm(id) { for (var i = 0; i < SUBJ.length; i++) if (SUBJ[i].id === id) return SUBJ[i].name; return id; }
+
+  function paintAll() {
+    Object.keys(cells).forEach(paintCell);
+    SUBJ.forEach(function (sj) {
+      var n = 0;
+      Object.keys(state).forEach(function (k) { if (cells[k] && state[k].indexOf(sj.id) >= 0) n++; });
+      chipEls[sj.id].querySelector('.n').textContent = n + '일';
+    });
+  }
+
+  /* Painting */
+  function apply(el, action) {
+    var k = el.dataset.k, list = (state[k] || []).slice();
+    if (brush === 'erase') { if (!list.length) return action || 'remove'; delete state[k]; paintCell(k); return 'remove'; }
+    var has = list.indexOf(brush) >= 0;
+    var act = action || (has ? 'remove' : 'add');
+    if (act === 'add' && !has) list.push(brush);
+    else if (act === 'remove' && has) list.splice(list.indexOf(brush), 1);
+    else return act;
+    list.sort(function (a, b) { return order(a) - order(b); });
+    if (list.length) state[k] = list; else delete state[k];
+    paintCell(k);
+    return act;
+  }
+  function order(id) { for (var i = 0; i < SUBJ.length; i++) if (SUBJ[i].id === id) return i; return 99; }
+
+  cal.addEventListener('pointerdown', function (e) {
+    var el = e.target.closest('.day[data-k]'); if (!el) return;
+    e.preventDefault(); dragging = true; dragAction = apply(el, null);
+  });
+  cal.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    var t = document.elementFromPoint(e.clientX, e.clientY), el = t && t.closest ? t.closest('.day[data-k]') : null;
+    if (el) apply(el, dragAction);
+  });
+  function end() { if (!dragging) return; dragging = false; dragAction = null; commit(); }
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+
+  /* Saving */
+  function setStatus(t) { document.getElementById('status').textContent = t; }
+  function commit() {
+    paintAll();
+    try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {}
+    if (!dbDoc) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flush, 400);
+  }
+  function flush() {
+    saveTimer = null;
+    if (saving) { queued = true; return; }
+    saving = true; setStatus('저장 중');
+    dbDoc.set({ days: JSON.parse(JSON.stringify(state)) }).then(function () {
+      setStatus('저장됨');
+    }, function () {
+      setStatus('이 기기에만 저장됨');
+    }).then(function () {
+      saving = false;
+      if (queued) { queued = false; flush(); }
+    });
+  }
+
+  setBrush(brush); paintDday(); paintAll(); setStatus('이 기기에만 저장됨');
+
+  /* Cloud sync (loads after first paint; page works without it) */
+  if (window.claude && claude.use) {
+    claude.use('db').then(function (db) {
+      if (!db) return;
+      dbDoc = db.doc('planner/main');
+      dbDoc.onSnapshot(function (snap) {
+        if (dragging || saving || queued || saveTimer) { setStatus('저장됨'); return; }
+        if (snap.exists) {
+          var days = (snap.data() || {}).days;
+          if (days && JSON.stringify(days) !== JSON.stringify(state)) {
+            state = days;
+            try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {}
+            paintAll();
+          }
+        }
+        setStatus('저장됨');
+      }, function () { setStatus('이 기기에만 저장됨'); });
+    }, function () {});
+  }
+
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) paintDday(); });
+})();
+</script>
+
+</body>
+</html>
